@@ -11,6 +11,6 @@ variable "provider_token" {
   sensitive = true
 }
 
-provider "fakewebservices" {
-  token = var.provider_token
+provider "aws" {
+  region = "us-west-2"
 }

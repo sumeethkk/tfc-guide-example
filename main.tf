@@ -1,41 +1,117 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
-# The following configuration uses a provider which provisions [fake] resources
-# to a fictitious cloud vendor called "Fake Web Services". Configuration for
-# the fakewebservices provider can be found in provider.tf.
-#
-# After running the setup script (./scripts/setup.sh), feel free to change these
-# resources and 'terraform apply' as much as you'd like! These resources are
-# purely for demonstration and created in Terraform Cloud, scoped to your TFC
-# user account.
-#
-# To review the provider and documentation for the available resources and
-# schemas, see: https://registry.terraform.io/providers/hashicorp/fakewebservices
-#
-# If you're looking for the configuration for the remote backend, you can find that
-# in backend.tf.
-
-
-resource "fakewebservices_vpc" "primary_vpc" {
-  name       = "Primary VPC"
-  cidr_block = "0.0.0.0/1"
+resource "aws_vpc" "vpc" {
+  cidr_block = "10.0.0.0/16"
 }
 
-resource "fakewebservices_server" "servers" {
-  count = 2
-
-  name = "Server ${count.index + 1}"
-  type = "t2.micro"
-  vpc  = fakewebservices_vpc.primary_vpc.name
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.vpc.id
+  #refrencing vpc id
 }
 
-resource "fakewebservices_load_balancer" "primary_lb" {
-  name    = "Primary Load Balancer"
-  servers = fakewebservices_server.servers[*].name
+resource "aws_route_table" "route-table" {
+  vpc_id = aws_vpc.vpc.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+  route {
+    ipv6_cidr_block = "::/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+  tags = {
+    Name = "Prod RT"
+  }
 }
 
-resource "fakewebservices_database" "prod_db" {
-  name = "Production DB"
-  size = 256
+resource "aws_subnet" "subnet" {
+  vpc_id = aws_vpc.vpc.id
+  cidr_block = "10.0.1.0/24"
+  availability_zone = "ap-south-1"
+
+  tags = {
+    name = "Prod Subnet"
+  }
+}
+
+resource "aws_route_table_association" "connection-RT-subnet" {
+  subnet_id = aws_subnet.subnet.id
+  route_table_id = aws_route_table.route-table.id
+}
+
+resource "aws_security_group" "sg" {
+  name = "security_group"
+  description = "Allow Web inbound traffic"
+  vpc_id = aws_vpc.vpc.id
+  ingress {
+    description = "HTTPS"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+  ingress {
+    description = "HTTP"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+  ingress {
+    description = "SSH"
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = [
+      "0.0.0.0/0"]
+  }
+  tags = {
+    Name = " security_group"
+  }
+}
+
+resource "aws_network_interface" "server-nic" {
+  subnet_id = aws_subnet.subnet.id
+  private_ips = [
+    "10.0.1.50"]
+  security_groups = [
+    aws_security_group.sg.id]
+}
+
+resource "aws_eip" "one" {
+  vpc = true
+  network_interface = aws_network_interface.server-nic.id
+  associate_with_private_ip = "10.0.1.50"
+  depends_on = [
+    aws_internet_gateway.igw]
+}
+
+resource "aws_instance" "server-instance" {
+  ami = "ami-04e5276ebb8451442"
+  instance_type = "t2.micro"
+  availability_zone = "ap-south-1"
+  key_name = "accesskey"
+
+  network_interface {
+    device_index = 0
+    network_interface_id = aws_network_interface.server-nic.id
+  }
+  user_data = <<-EOF
+                #!/bin/bash
+                sudo apt update -y
+                sudo apt install apache2 -y
+                sudo systemctl start apache2
+                sudo bash -c echo my very first web server > /var/www/html/index.html'
+                EOF
+
+  tags = {
+    Name = "my-web-server"
+  }
 }
