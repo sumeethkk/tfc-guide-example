@@ -5,10 +5,10 @@
 # For more information, see https://www.terraform.io/docs/backends/types/remote.html
 terraform {
   cloud {
-    organization = "{{ORGANIZATION_NAME}}"
+    organization = "Sumeeth_AWS"
 
     workspaces {
-      name = "{{WORKSPACE_NAME}}"
+      name = "terraform-base"
     }
   }
 
