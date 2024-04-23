@@ -94,7 +94,7 @@ resource "aws_eip" "one" {
 }
 
 resource "aws_instance" "server-instance" {
-  ami = "ami-04e5276ebb8451442"
+  ami = "ami-0663b059c6536cac8"
   instance_type = "t2.micro"
   availability_zone = "us-west-2a"
   key_name = "accesskey"
