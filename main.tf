@@ -93,14 +93,14 @@ resource "aws_eip" "one" {
     aws_internet_gateway.igw]
 }
 
-resource "aws_key_pair" "ec2-ke" {
+resource "aws_key_pair" "ec2-key" {
   key_name   = "ec2-key"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCq/RPzjeykbSQ8e35cLtjnaKIPw43LHImgFdv9ezO8csdVkv7kLqTYM99zhUchQdHIvzXpS6xzDwToJ0gj1nIkz4TiUnrrGCgA728GyWKsKR21HaLbZVJLcEmbSaNRCpMgtT0WgEMIXd5c1PVBF5F5tBklSQhIn4b+Iw7CuPXlCzjx0djGHgMGwoAvMpmSsAKZS6Ra3LptGtFvaB0oGuIegyDI7qNU6z6jXZRRCcNCEKV9JsgQzDNt/TtTtthom3rYziSIlU1yK7i+xDTGC/uK+4IY6EpTYLCKN61w+xn0N3SlqgZjLgHRGMuoV2OGQ5nEVgwAAko+oU3BfQWv/sLqb0NZdEmGVBo6ibGTUFn2y7HJPXzw6bgH8RUzUGGWiz3scAOeyGFcCrT4gSgnhpDGB1RTIcLf0aXuhyXddGqM4NoTq2GVjGrk7G5gBIpRNwTd1HuIQWSBipiZVcuCDafpQC4hmvBRf/IPTuE9XtHaj5mUy3DqGpQVkU9MY1vbrUk= sumee@LAPTOP-LP5RLUPM"
 }
 
 output "app_keypair" {
   description = "The ARN of the key"
-  value       = aws_key_pair.ec2-ke.key_name
+  value       = aws_key_pair.ec2-key.key_name
 }
 
 resource "aws_instance" "server-instance" {
