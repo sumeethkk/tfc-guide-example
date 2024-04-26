@@ -97,7 +97,7 @@ resource "aws_instance" "server-instance" {
   ami = "ami-0663b059c6536cac8"
   instance_type = "t2.micro"
   availability_zone = "us-west-2a"
-  key_name = "EC2_insatance"
+  key_name = "arn:aws:kms:us-west-2:803813738323:key/24dd8e28-5cb1-4b9d-9fb2-1c2e6e4ef3a2"
 
   network_interface {
     device_index = 0
